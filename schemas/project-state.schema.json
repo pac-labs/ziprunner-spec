@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ziprunner:spec:v1:project-state.schema",
+  "title": "Existing ZipRunner project state bridge",
+  "type": "object",
+  "required": [
+    "schema",
+    "project",
+    "current_version",
+    "passes",
+    "roadmap"
+  ],
+  "properties": {
+    "schema": {
+      "enum": [
+        "ziprunner.project-state.v1",
+        "ziprunner.project-state/v1"
+      ]
+    },
+    "project": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{1,127}$"
+    },
+    "current_version": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "current_focus": {
+      "type": "string"
+    },
+    "manager_review": {
+      "type": "object"
+    },
+    "requirements": {
+      "type": [
+        "array",
+        "string"
+      ]
+    },
+    "open_questions": {
+      "type": "array"
+    },
+    "acceptance_criteria": {
+      "type": [
+        "array",
+        "string"
+      ]
+    },
+    "passes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{1,127}$"
+          },
+          "version": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "roadmap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{1,127}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "suggested",
+              "planned",
+              "in_progress",
+              "review",
+              "done",
+              "deferred",
+              "removed",
+              "blocked"
+            ]
+          },
+          "priority": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "acceptance_criteria": {
+            "type": [
+              "string",
+              "array"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "array"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

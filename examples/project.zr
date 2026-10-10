@@ -1,0 +1,30 @@
+{
+  "schema": "ziprunner.zr/v1",
+  "project_key": "example-project",
+  "label": "Example project",
+  "match": [
+    "example-project-*-ziprunner.zip"
+  ],
+  "command_subdir": ".",
+  "stop": [],
+  "stop_ports": [],
+  "build": [
+    "python -m compileall ."
+  ],
+  "start": [],
+  "build_window": "hidden",
+  "start_window": "managed",
+  "delete_missing": false,
+  "strip_single_root": false,
+  "protected_paths": [
+    ".git/**",
+    ".env",
+    ".env.*",
+    "logs/**",
+    "state/**",
+    "secrets/**"
+  ],
+  "require_clean_git_before_overlay": true,
+  "mechanisms_require_build_success": true,
+  "post_build_mechanisms": []
+}

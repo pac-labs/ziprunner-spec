@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ziprunner:spec:v1:source-package-manifest.schema",
+  "title": "Existing ZipRunner self-source content inventory",
+  "type": "object",
+  "required": [
+    "schema",
+    "project",
+    "version",
+    "package_kind",
+    "entries",
+    "file_count"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ziprunner.source-package-manifest.v1"
+    },
+    "project": {
+      "const": "ziprunner"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_kind": {
+      "const": "complete_source"
+    },
+    "managed_task_id": {
+      "type": "string"
+    },
+    "file_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "required_source_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "retired_source_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256",
+          "size",
+          "mode"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mode": {
+            "type": "string",
+            "pattern": "^[0-7]{4}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": true
+}

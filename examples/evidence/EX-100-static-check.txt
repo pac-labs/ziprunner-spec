@@ -1,0 +1,2 @@
+Example evidence fixture only. This is not an actual executed project test.
+This demonstrates how a real model should attach evidence it actually generated.

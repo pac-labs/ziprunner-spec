@@ -1,0 +1,33 @@
+{
+  "schema": "ziprunner.project-state.v1",
+  "project": "example-project",
+  "current_version": "1.2.3",
+  "updated_at": "2026-10-10T09:28:00+02:00",
+  "summary": "Illustrative project progress",
+  "current_focus": "Windows validation for the example progress view",
+  "passes": [
+    {
+      "id": "EX-20261010-001",
+      "version": "1.2.3",
+      "date": "2026-10-10",
+      "title": "Example status view",
+      "status": "source_implemented_not_target_verified"
+    }
+  ],
+  "roadmap": [
+    {
+      "id": "EX-100",
+      "title": "Add status summary view",
+      "status": "review",
+      "priority": "high",
+      "acceptance_criteria": "Source + acceptance checks complete"
+    },
+    {
+      "id": "EX-110",
+      "title": "Windows integration check",
+      "status": "blocked",
+      "priority": "high",
+      "acceptance_criteria": "Windows build and GUI smoke pass"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "ziprunner.post-update-tests.v1",
+  "version": "1.2.3",
+  "tests": [
+    {
+      "kind": "command",
+      "semantic_id": "example-build-check",
+      "definition_revision": "1",
+      "rerun_policy": "every_update",
+      "command": "python -m compileall .",
+      "attention_on_failure": true,
+      "gating": false
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "ziprunner.update-manifest/v1",
+  "spec_version": "1.0.0",
+  "project": {
+    "key": "example-project",
+    "version": "1.2.3",
+    "base_version": "1.2.2"
+  },
+  "update": {
+    "id": "EX-20261010-001",
+    "kind": "source_update",
+    "created_at": "2026-10-10T09:28:00+02:00",
+    "summary": "Illustrative project status display update; not a claim of a real build"
+  },
+  "planned_work": [
+    {
+      "id": "EX-100",
+      "title": "Add status summary view",
+      "acceptance_criteria": "Rendered view displays a status and has source-level tests",
+      "priority": "high"
+    },
+    {
+      "id": "EX-110",
+      "title": "Complete Windows integration check",
+      "acceptance_criteria": "Run target Windows build and GUI smoke test",
+      "priority": "high"
+    }
+  ],
+  "done_work": [
+    {
+      "id": "EX-100",
+      "summary": "Example source change recorded; source-only fixture available",
+      "evidence": [
+        {
+          "kind": "documentation",
+          "ref": "evidence/EX-100-static-check.txt",
+          "description": "Illustrative fixture, not executed proof"
+        }
+      ]
+    }
+  ],
+  "todo_work": [
+    {
+      "id": "EX-110",
+      "status": "blocked",
+      "next_action": "Run build and UI smoke test on Windows",
+      "blockers": [
+        "Target Windows environment not available to the author"
+      ]
+    }
+  ],
+  "validation": {
+    "model_reported": "partial",
+    "checks": [
+      {
+        "id": "EX-STATIC-001",
+        "description": "Static example review",
+        "status": "not_run",
+        "reason": "Fixture is illustrative; no actual target project built"
+      },
+      {
+        "id": "EX-WINDOWS-001",
+        "description": "Windows build and GUI smoke",
+        "status": "not_run",
+        "environment": "Windows",
+        "reason": "Requires target machine"
+      }
+    ]
+  },
+  "handover": {
+    "next_pass": "Run Windows build, collect logs, perform GUI acceptance and close EX-110 after review",
+    "risks": [
+      "Target runtime remains unverified"
+    ],
+    "blockers": [
+      "Windows validation pending"
+    ],
+    "notes": [
+      "Do not infer health from this example"
+    ]
+  },
+  "operator_actions": [
+    {
+      "id": "EX-OP-001",
+      "description": "Perform target-platform acceptance",
+      "status": "required"
+    }
+  ],
+  "release": {
+    "requested": false,
+    "requires_operator_approval": true,
+    "notes": "No release without review"
+  }
+}
