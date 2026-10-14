@@ -1,0 +1,25 @@
+{
+  "schema": "ziprunner.workboard-update.v1",
+  "project": "your-project-key",
+  "version": "1.2.3",
+  "summary": "Implemented the requested change and documented the remaining verification.",
+  "implemented": [
+    {
+      "id": "repair-package-handling",
+      "title": "Repair package handling",
+      "summary": "Fixed the package handling path and added regression coverage for the original failure.",
+      "operator_checks": [
+        "Import the new ZIP through ZipRunner and confirm the build completes successfully.",
+        "Repeat the original failure scenario and verify it no longer occurs."
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "windows-operator-verification",
+      "title": "Verify on the live Windows installation",
+      "summary": "Confirm the fix works in the running application with real project data.",
+      "priority": "medium"
+    }
+  ]
+}

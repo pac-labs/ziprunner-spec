@@ -1,0 +1,7 @@
+{
+  "schema": "ziprunner.looprd-link/v1",
+  "project": "example-project",
+  "component": "example-project",
+  "specification": "looprd.yaml",
+  "specification_sha256": "3cacefec9c1f505afc9d65c587d9d56fa0eadc9db53b07a28124ae1321ec85c0"
+}

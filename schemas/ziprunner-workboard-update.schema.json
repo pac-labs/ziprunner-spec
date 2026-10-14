@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ziprunner.local/schemas/ziprunner/v1/workboard-update.schema.json",
+  "title": "ZipRunner mandatory source-ZIP workboard delta",
+  "type": "object",
+  "required": ["schema", "project", "version", "summary", "implemented", "remaining"],
+  "properties": {
+    "schema": {"const": "ziprunner.workboard-update.v1"},
+    "project": {"type": "string", "minLength": 1, "maxLength": 120},
+    "version": {"type": "string", "minLength": 1, "maxLength": 100},
+    "summary": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "implemented": {"type": "array", "minItems": 1, "maxItems": 150, "items": {"$ref": "#/$defs/implementedItem"}},
+    "remaining": {"type": "array", "maxItems": 150, "items": {"$ref": "#/$defs/remainingItem"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "baseItem": {"type": "object", "required": ["id", "title", "summary"], "properties": {
+      "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$"},
+      "title": {"type": "string", "minLength": 1, "maxLength": 240},
+      "summary": {"type": "string", "minLength": 1, "maxLength": 2000}
+    }},
+    "implementedItem": {"allOf": [ {"$ref": "#/$defs/baseItem"}, {"type": "object", "required": ["operator_checks"], "properties": {
+      "operator_checks": {"type": "array", "minItems": 1, "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 500}}
+    }}]},
+    "remainingItem": {"allOf": [ {"$ref": "#/$defs/baseItem"}, {"type": "object", "properties": {
+      "priority": {"enum": ["critical", "high", "medium", "low"]}
+    }}]}
+  }
+}

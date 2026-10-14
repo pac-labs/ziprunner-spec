@@ -1,0 +1,25 @@
+{
+  "schema": "ziprunner.workboard-update.v1",
+  "project": "example-project",
+  "version": "1.2.3",
+  "summary": "Implemented project-scoped update verification while preserving operator approval gates.",
+  "implemented": [
+    {
+      "id": "EX-100",
+      "title": "Check update identity",
+      "summary": "Reject incorrect project identity before source application.",
+      "operator_checks": [
+        "Open the selected project and confirm its configured key matches the package.",
+        "Try a package for a different project and confirm it is rejected before overlay."
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "EX-110",
+      "title": "Verify Windows GUI status",
+      "summary": "Perform the manual GUI walkthrough on an operator Windows host.",
+      "priority": "medium"
+    }
+  ]
+}

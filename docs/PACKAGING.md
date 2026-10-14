@@ -1,6 +1,6 @@
 # Package format and compatibility
 
-## Existing source packages
+## Established package conventions
 
 ZipRunner 1.2.304.49 matches configured ZIP filename patterns and supports `project.zr` project recipes (`schema: ziprunner.zr/v1`). Current `project.zr` uses keys such as `project_key`, `match`, `command_subdir`, `stop`, `stop_ports`, `build`, `start`, `build_window`, `start_window`, `strip_single_root`, `delete_missing`, `protected_paths`, `post_build_mechanisms` and `git`. See `examples/project.zr` for a minimal *reference example*, not a promise every field can be used without review.
 
@@ -8,12 +8,13 @@ The application also recognizes `.ziprunner-post-update-tests.json` with `schema
 
 ZipRunner self-source packages also use `.ziprunner-package-manifest.json` (`ziprunner.source-package-manifest.v1`) with `entries` `{path, sha256, size, mode}`, `file_count`, `project`, `version`, `package_kind`, `required_source_paths`, `retired_source_paths`, and `managed_task_id`. This existing format must remain intact for self-update compatibility. The new `ziprunner-manifest.json` is **separate** and never replaces the per-file inventory.
 
-## Proposed v1 producer ZIP
+## v2 interoperable source ZIP
 
 ```text
 my-project-1.2.3-ziprunner.zip
   project.zr
-  ziprunner-manifest.json
+  .ziprunner-workboard-update.json  # MANDATORY runtime source ZIP gate
+  ziprunner-manifest.json            # supplemental full spec conformance
   ziprunner.project-state.json
   .ziprunner-post-update-tests.json  # optional
   ZIPRUNNER_HANDOFF.md                # recommended
@@ -28,6 +29,8 @@ A project registration `.zr` file may also be distributed separately from the ZI
 
 For source updates, new producer metadata is expected in the source tree. The source and ZIP may contain additional project documentation, but not credentials, local config or generated runtime state.
 
+The mandatory `.ziprunner-workboard-update.json` rule applies to **all source update ZIPs**, not to RoboScope text patches, and not to a future recognized `progress_update` package kind. The supplemental `ziprunner-manifest.json` is not an alternative to the mandatory Work board file.
+
 ## Proposed metadata-only progress ZIP
 
 ```text
@@ -38,16 +41,24 @@ my-project-progress-20261010.zip
   docs/...                           # non-executable planning docs
 ```
 
-As of 1.2.304.49 this is **not an implemented ZipRunner import path**. Implement separately; do not drop such packages into a production inbox expecting automatic metadata-only handling. A compatible consumer must refuse build/start and require a project match and appropriate review.
+The metadata-only format is a **proposed extension**, not an established general consumer intake path. Consumers that do not explicitly support it must reject the package kind. Compatible consumers must avoid source overlay/build/start, validate project identity, and require appropriate review.
+
+## Optional Looprd component source
+
+A source update for a Looprd-enabled project MAY ship its own `looprd.yaml` (under a declared path) with optional root-level `ziprunner.looprd.json` linking the configured ZipRunner project to the Looprd component and expected SHA-256. The actual DAPI YAML remains the data/API model source of truth; the sidecar is a **proposed ZipRunner producer convention**, not a deployed application interface. See [Looprd integration](LOOPRD.md). Do not ship database rows, connection URLs, API keys, admin credentials or node `sources.yaml` containing private deployment values. A ZIP containing Looprd files does not itself request a database migration or deployment. Non-Looprd projects do not need the sidecar.
 
 ## Consistency and installation
 
-1. Validate ZIP safety, archive integrity and new work manifest.
-2. Identify target by configured explicit matching AND manifest/project identity; conflicts and mismatches are attention states, not silent overrides.
-3. Wait for complete download, validate safe paths, stage to temp, then inspect the staged tree.
-4. Preserve protected config, runtime state and local overrides. Back up the project before overlay.
+1. Wait for a complete download, validate ZIP safety and safe paths, then extract to a bounded temporary staging area.
+2. Match the configured project key and inspect **mandatory root-level Work board update** in staging. Missing, malformed, empty or mismatched workboard metadata rejects the source ZIP **before stop, backup or overlay**.
+3. Validate remaining archive integrity, project-specific packaging, and supplementary manifests without allowing inferred or conflicting targets.
+4. Preserve protected config, runtime state and local overrides. Back up the project only after mandatory workboard validation succeeds.
 5. Apply source update under the existing transactional/update policy; run trusted stop/build/start commands as configured. Provide copyable live logs.
 6. Record checks, evidence and per-update results in independent durable state.
-7. Keep release steps gated and individually visible to the operator.
+7. After a successful build import the workboard evidence without marking Done; failed builds MUST NOT be imported as delivered (nor assumed rolled back). Deduplicate by ZIP hash. Keep release steps gated and individually visible to the operator.
 
-Do not embed a project's active `ziprunner.config.json` in any package. ZipRunner self-source MUST contain only `ziprunner.config.sample.json` for configuration; a later malicious or mistaken ZIP must not overwrite the installed active config.
+Packages MUST NOT include a project's active `ziprunner.config.json`. ZipRunner self-source MUST contain only `ziprunner.config.sample.json` for configuration; a later malicious or mistaken ZIP must not overwrite the installed active config.
+
+## Task closure after a release
+
+Source ZIP authors MUST reuse existing Work board IDs for delivered functionality and supply the required `operator_checks`; the v1 file contains no authority to mark Done. The consuming ZipRunner implementation MUST associate imported implementation evidence with the existing task ID, request manager/QA and operator verification, and **move the same task to Done** after approved acceptance. A release readiness check fails for delivered scope not independently verified and closed. See [Work board lifecycle](WORKBOARD_UPDATE.md).

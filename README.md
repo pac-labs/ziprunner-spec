@@ -1,66 +1,73 @@
-# ZipRunner Specification
+# ZipRunner Interchange Specification
 
-**Version:** 1.0.0 (proposal, 2026-10-10)  
-**Status:** Publication-ready specification; ZipRunner application integration still required.  
-**Source baseline:** ZipRunner **1.2.304.49**, cross-checked against a **Bozja Frontline 0.1.0.3** managed update (see [source audit](docs/SOURCE_AUDIT.md)).
+**Specification version: 2.1.1** · **Status: published-format specification with clearly identified extensions**
 
-This is the standalone, publicly publishable **ZipRunner-compatible source update and development handover protocol**. AI models and build tools can follow it **without having the ZipRunner application source code**. It standardizes package identity, plans, work completed, work remaining, validation evidence, safe application boundaries, and operator handover.
+ZipRunner Interchange is an open, versioned format for distributing software source updates with consistent project identity, work tracking, verification evidence, and release controls. The standard is useful to individual developers, open-source maintainers, development teams, build systems, and automated tooling. Packages can be authored and validated without access to the ZipRunner application's source code.
 
-> **Important:** `ziprunner-manifest.json` and metadata-only `progress_update` packages are **proposed for ZipRunner vNext**. ZipRunner 1.2.304.49 does *not* yet consume this new manifest. The existing `.zr`/`project.zr`, `ziprunner.project-state.json`, `.ziprunner-post-update-tests.json`, and (ZipRunner self-source only) `.ziprunner-package-manifest.json` already exist. Publishing the standard alone does not retrofit the installed application.
+The protocol distinguishes between **what a package author reports**, **what a build or runtime has demonstrated**, and **what a reviewer has accepted**. These are deliberately separate forms of evidence.
 
-## Start here
+## At a glance
 
-1. [Normative specification](SPECIFICATION.md) — versioned requirements.
-2. [Work and progress lifecycle](docs/WORK_PROGRESS.md) — planned/done/todo and truthfulness rules.
-3. [Package layouts](docs/PACKAGING.md) — source vs progress-only ZIPs; compatibility.
-4. [Security and gating](docs/SAFETY.md) — safe matching, protected paths, approvals.
-5. [Independent AI-model instructions](docs/MODEL_HANDOFF.md) — what to read, produce, and report.
-6. [Adoption roadmap](docs/ADOPTION.md) — staged implementation in ZipRunner.
-7. [Source audit](docs/SOURCE_AUDIT.md) — exact evidence from the archived program.
+| Capability | Purpose | Status |
+| --- | --- | --- |
+| Source ZIP workboard (`.ziprunner-workboard-update.json`) | Names delivered work, remaining work, and human verification steps | Mandatory source-package format for the documented 1.2.304.55 gate |
+| Workboard reconciliation | Tracks existing tasks by stable ID; moves verified and approved work to Done | Normative consumer conformance requirement; implementation support varies |
+| Interchange manifest (`ziprunner-manifest.json`) | Richer planned/completed/remaining work and validation provenance | Supplemental v2 interchange contract; not part of the established 1.2.304.55 intake gate |
+| Protected packaging | Rejects unsafe archives and protects local configuration and secrets | Core safety contract |
+| Looprd / DAPI link (`ziprunner.looprd.json`) | Optionally associates a project with an API/database specification | Optional interoperability extension, not a deployment instruction |
+| Metadata-only progress package | Transfers planning information without a source overlay | Proposed package kind; consumer support must be established independently |
 
-## Structure
+## Documentation
+
+- [Specification](SPECIFICATION.md) — normative requirements and terminology.
+- [Package format](docs/PACKAGING.md) — source package layout and compatibility.
+- [Workboard update](docs/WORKBOARD_UPDATE.md) — required JSON structure, task identity, and import rules.
+- [Progress and verification](docs/WORK_PROGRESS.md) — lifecycle semantics and reporting.
+- [Safety](docs/SAFETY.md) — archive validation, identity, configuration protection, and approvals.
+- [Looprd integration](docs/LOOPRD.md) — optional API and data-model interoperability.
+- [Producer guide](docs/PRODUCERS.md) — public guidance for people and tools generating packages.
+- [Conformance](docs/CONFORMANCE.md) — validation levels and interoperable consumer behavior.
+- [Compatibility](docs/COMPATIBILITY.md) — supported conventions and implementation caveats.
+- [Changelog](CHANGELOG.md) — specification revisions.
+
+## Example source ZIP
 
 ```text
-SPECIFICATION.md
-AGENTS.md
-CHANGELOG.md
-schemas/ziprunner-manifest.schema.json
-schemas/project-state.schema.json
-schemas/post-update-tests.schema.json
-schemas/source-package-manifest.schema.json
-examples/
-tools/validate.py
-tests/
-.github/workflows/validate-spec.yml
-docs/
+example-project-1.2.3-ziprunner.zip
+├── project.zr
+├── .ziprunner-workboard-update.json      # required for source update ZIPs
+├── ziprunner-manifest.json               # supplemental interchange contract
+├── ziprunner.project-state.json          # optional compatible progress bridge
+├── ZIPRUNNER_HANDOFF.md                  # human-readable release information
+├── README.md
+├── src/
+└── tests/
 ```
 
-## Use by any model
+For projects using [Looprd](https://github.com/pac-labs/dapi), the ZIP may also contain a `looprd.yaml` and an optional `ziprunner.looprd.json` identity-and-hash link. Other projects do not need Looprd.
 
-Copy this instruction to a fresh development conversation:
+## Validation
 
-> Follow the ZipRunner Specification v1.0.0 at `<your published GitHub URL to SPECIFICATION.md>`. Read its referenced packaging, safety and model-handover documents. For my project, produce a full source ZIP containing `ziprunner-manifest.json` with planned_work, done_work, todo_work and evidence, alongside the existing `project.zr` and `ziprunner.project-state.json` contracts. Do not claim local or Windows tests were run if they were not. Do not authorize any release action. Return the ZIP and a concise work summary.
-
-**Use a pinned tag or commit URL** in automation; mutable `main` is convenient for discovery but should not silently change the contract during a development pass.
-
-## Validate
-
-Python 3.10+; no nonstandard dependencies for the repository's validator:
+The repository includes a Python 3.10+ standalone validator and regression tests. The validator uses the standard library and does not execute packaged code.
 
 ```sh
+python tools/validate.py workboard examples/ziprunner-workboard-update.example.json --expected-project example-project
 python tools/validate.py manifest examples/ziprunner-manifest.json --root examples
-python tools/validate.py package path/to/update.zip --expected-project my-project
+python tools/validate.py package path/to/example-project-1.2.3-ziprunner.zip --expected-project example-project
+python tools/validate.py looprd examples/ziprunner.looprd.json --root examples --expected-project example-project
 python -m unittest discover -s tests -v
 ```
 
-The included JSON Schema files follow Draft 2020-12 for tooling that supports full schema validation. The standard-library validator implements the required v1 consistency/safety checks, but does not purport to be a general JSON Schema engine.
+The JSON Schema documents use Draft 2020-12. The bundled standalone validator enforces the supported interoperability rules, not every feature of a general JSON Schema engine. Passing static checks does not establish build success, operator acceptance, or deployment health.
 
-## Publish to GitHub
+## Versioning and compatibility
 
-Create an empty repository named `ziprunner-spec`, unpack this ZIP into the repository root, and commit its contents. Publish a stable tag `v1.0.0` after review. Before making a public repository, choose a license appropriate to your intended reuse; none has been assumed on your behalf. No active ZipRunner configuration or environment-specific credentials are bundled here.
+The **specification version** (`2.1.1`) and the **embedded manifest schema versions** are separate. This documentation-focused patch does not change any JSON field, validator decision, package requirement, or release gate from 2.1.0.
 
-## Contract status legend
+For reproducible builds, a project may pin the specification to a published tag or commit. Detailed compatibility notes distinguish observed consumer behavior from additional normative requirements and optional proposals.
 
-- **Observed in 1.2.304.49:** identified by inspection of the packaged source and/or a real managed package.
-- **Normative v1 proposal:** required of producers claiming conformance to **this** specification; may require ZipRunner changes before consumption.
-- **Application implementation:** work for a later ZipRunner update, not included in this specification repository.
+## Repository
+
+[github.com/pac-labs/ziprunner-spec](https://github.com/pac-labs/ziprunner-spec)
+
+This repository defines an interoperability format. It is not the ZipRunner application, the Looprd runtime, a credentials store, or a deployment service. License terms depend on the license published in the repository.

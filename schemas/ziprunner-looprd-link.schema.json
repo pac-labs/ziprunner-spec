@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pac-labs/ziprunner-spec/blob/v2.1.0/schemas/ziprunner-looprd-link.schema.json",
+  "title": "Optional ZipRunner to Looprd component link",
+  "description": "Producer-declared binding to an existing looprd.yaml. This does not deploy or authorize the component.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project",
+    "component",
+    "specification",
+    "specification_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ziprunner.looprd-link/v1"
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "component": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,47}$"
+    },
+    "specification": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "description": "Portable relative path to looprd/v1 YAML in the extracted source tree."
+    },
+    "specification_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

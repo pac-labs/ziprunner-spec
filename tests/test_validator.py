@@ -65,18 +65,97 @@ class ManifestTests(unittest.TestCase):
                 obj=json.loads(file.read_text())
                 self.assertEqual('https://json-schema.org/draft/2020-12/schema',obj['$schema'])
 
+class WorkboardTests(unittest.TestCase):
+    def setUp(self):
+        self.board=json.loads((ROOT/'examples/ziprunner-workboard-update.example.json').read_text())
+
+    def test_valid_reference(self):
+        self.assertEqual([],zr.validate_workboard(self.board,expected_project='example-project',expected_version='1.2.3'))
+
+    def test_empty_implemented(self):
+        self.board['implemented']=[]
+        self.assertIn('too few items',str(zr.validate_workboard(self.board)))
+
+    def test_remaining_must_be_explicit(self):
+        del self.board['remaining']
+        self.assertIn('missing remaining',str(zr.validate_workboard(self.board)))
+
+    def test_wrong_schema_spelling(self):
+        self.board['schema']='ziprunner.workboard-update/v1'
+        self.assertIn('schema must be exactly',str(zr.validate_workboard(self.board)))
+
+    def test_wrong_target(self):
+        self.assertIn('workboard project mismatch',str(zr.validate_workboard(self.board,expected_project='other')))
+
+    def test_wrong_version(self):
+        self.assertIn('workboard version mismatch',str(zr.validate_workboard(self.board,expected_version='9.9.9')))
+
+    def test_duplicate_task_id_cross_array(self):
+        self.board['remaining'][0]['id']=self.board['implemented'][0]['id']
+        self.assertIn('duplicate task id',str(zr.validate_workboard(self.board)))
+
+    def test_invalid_task_id(self):
+        for ident in ('-bad','x/y','x y','x\\y',':bad'):
+            with self.subTest(ident=ident):
+                self.board['implemented'][0]['id']=ident
+                self.assertIn('invalid task id',str(zr.validate_workboard(self.board)))
+
+    def test_blank_operator_checks(self):
+        self.board['implemented'][0]['operator_checks']=['  ']
+        self.assertIn('invalid operator_checks text',str(zr.validate_workboard(self.board)))
+
+    def test_invalid_priority(self):
+        self.board['remaining'][0]['priority']='urgent'
+        self.assertIn('invalid priority',str(zr.validate_workboard(self.board)))
+
+    def test_official_v1_reference_example(self):
+        reference=json.loads((ROOT/'examples/ziprunner-workboard-update.reference.json').read_text())
+        self.assertEqual([],zr.validate_workboard(reference,expected_project='YOUR-PROJECT-KEY'))
+
+    def test_official_field_limit(self):
+        self.board['implemented'][0]['title']='X'*241
+        self.assertIn('max 240',str(zr.validate_workboard(self.board)))
+
+    def test_official_check_limit(self):
+        self.board['implemented'][0]['operator_checks']=['ok']*21
+        self.assertIn('1-20 operator_checks',str(zr.validate_workboard(self.board)))
+
+    def test_official_max_items(self):
+        base=self.board['implemented'][0]
+        self.board['implemented']=[dict(base, id='ID-'+str(i)) for i in range(151)]
+        self.assertIn('too many items',str(zr.validate_workboard(self.board)))
+
+    def test_official_task_id_length(self):
+        self.board['implemented'][0]['id']='A'*121
+        self.assertIn('invalid task id',str(zr.validate_workboard(self.board)))
+
+    def test_invalid_utf8(self):
+        with self.assertRaisesRegex(ValueError,'UTF-8'):
+            zr.read_workboard_bytes(b'\xff')
+
+    def test_oversize(self):
+        with self.assertRaisesRegex(ValueError,'256 KiB'):
+            zr.read_workboard_bytes(b'x'*(256*1024+1))
+
+    def test_duplicate_json_key(self):
+        with self.assertRaisesRegex(ValueError,'duplicate JSON key'):
+            zr.read_workboard_bytes(b'{"project":"one","project":"two"}')
+
+
 class ArchiveTests(unittest.TestCase):
     def setUp(self):
         self.manifest=json.loads((ROOT/'examples/ziprunner-manifest.json').read_text())
         self.recipe=(ROOT/'examples/project.zr').read_bytes()
+        self.workboard=json.loads((ROOT/'examples/ziprunner-workboard-update.example.json').read_text())
         self.evidence=(ROOT/'examples/evidence/EX-100-static-check.txt').read_bytes()
 
-    def pack(self,additional=None,manifest=None):
+    def pack(self,additional=None,manifest=None,workboard=True):
         tmp=tempfile.TemporaryDirectory()
         path=Path(tmp.name)/'test.zip'
         with zipfile.ZipFile(path,'w',zipfile.ZIP_DEFLATED) as z:
             z.writestr('ziprunner-manifest.json',json.dumps(self.manifest if manifest is None else manifest))
             z.writestr('project.zr',self.recipe)
+            if workboard: z.writestr('.ziprunner-workboard-update.json',json.dumps(self.workboard))
             z.writestr('evidence/EX-100-static-check.txt',self.evidence)
             for name,content in (additional or []):z.writestr(name,content)
         return tmp,path
@@ -85,6 +164,48 @@ class ArchiveTests(unittest.TestCase):
         t,path=self.pack()
         try:self.assertEqual([],zr.inspect_archive(path,'example-project'))
         finally:t.cleanup()
+
+    def test_source_update_missing_workboard(self):
+        t,path=self.pack(workboard=False)
+        try:self.assertIn('missing required root-level .ziprunner-workboard-update.json',str(zr.inspect_archive(path)))
+        finally:t.cleanup()
+
+    def test_source_update_wrong_schema(self):
+        self.workboard['schema']='ziprunner.workboard-update/v1'
+        t,path=self.pack()
+        try:self.assertIn('workboard schema must be exactly',str(zr.inspect_archive(path)))
+        finally:t.cleanup()
+
+    def test_source_update_wrong_workboard_project(self):
+        self.workboard['project']='other'
+        t,path=self.pack()
+        try:self.assertIn('workboard project mismatch',str(zr.inspect_archive(path)))
+        finally:t.cleanup()
+
+    def test_source_update_wrong_workboard_version(self):
+        self.workboard['version']='0.0.1'
+        t,path=self.pack()
+        try:self.assertIn('workboard version mismatch',str(zr.inspect_archive(path)))
+        finally:t.cleanup()
+
+    def test_source_update_root_only(self):
+        t,path=self.pack(workboard=False,additional=[('nested/.ziprunner-workboard-update.json',json.dumps(self.workboard))])
+        try:self.assertIn('missing required root-level',str(zr.inspect_archive(path)))
+        finally:t.cleanup()
+
+    def test_source_update_workboard_exceeds_limit(self):
+        t,path=self.pack(workboard=False,additional=[('.ziprunner-workboard-update.json',' '* (256*1024+1))])
+        try:self.assertIn('size exceeds 256 KiB',str(zr.inspect_archive(path)))
+        finally:t.cleanup()
+
+    def test_source_update_missing_supplemental_manifest_still_reports_missing_workboard(self):
+        tmp=tempfile.TemporaryDirectory();path=Path(tmp.name)/'test.zip'
+        with zipfile.ZipFile(path,'w') as z:z.writestr('project.zr',self.recipe)
+        try:
+            errs=zr.inspect_archive(path)
+            self.assertIn('missing supplemental ziprunner-manifest.json',str(errs))
+            self.assertIn('missing required root-level',str(errs))
+        finally:tmp.cleanup()
 
     def test_unsafe_zip_filename(self):
         t,path=self.pack([('../escape','x')])
@@ -118,6 +239,7 @@ class ArchiveTests(unittest.TestCase):
         with zipfile.ZipFile(path,'w') as z:
             z.writestr('ziprunner-manifest.json',json.dumps(self.manifest))
             z.writestr('project.zr',self.recipe)
+            z.writestr('.ziprunner-workboard-update.json',json.dumps(self.workboard))
             z.writestr('evidence/EX-100-static-check.txt',self.evidence)
             item=zipfile.ZipInfo('link');item.create_system=3;item.external_attr=(0o120777<<16)
             z.writestr(item,'target')
