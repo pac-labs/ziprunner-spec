@@ -2,6 +2,21 @@
 
 Version numbers describe the ZipRunner Interchange specification, not the installed ZipRunner application or the separate Looprd runtime.
 
+## 2.3.0 — 2026-10-15
+
+- Added the supplemental full-conformance `ziprunner.verification-plan/v1` schema, example, and static validation binding implemented Work board tasks to functional and manual checks.
+- Defined consumer-observed `ziprunner.verification-report/v1` results anchored to exact source and plan hashes; missing or failed tests do not imply Done.
+- Defined consumer-owned `ziprunner.origin-feedback/v1` and verified request/window correlation, delivery acknowledgment, retry/deduplication, and fallback behavior.
+- Preserved the mandatory Work board v1 file, stable-ID QA/operator gates, Looprd, direct ZIP handoffs, and explicit release permissions.
+- Added public conformance documentation and reference tests; this specification release does not install or enable a browser/ZipRunner runtime integration.
+
+## 2.2.0 — 2026-10-15
+
+- Required a clickable direct download link to the **actual ZIP** in each external delivery handoff, with exact filename, project/version and SHA-256.
+- Clarified external handoff versus in-package `ZIPRUNNER_HANDOFF.md`: download links assigned after upload need not be embedded in the ZIP.
+- Defined explicit **delivery incomplete** reporting when an accessible artifact link is unavailable, and prohibited fabricated links or checksums.
+- Added public documentation and an example delivery; kept Work board schemas, validators, task reconciliation, and Looprd integration unchanged.
+
 ## 2.1.1 — 2026-10-14
 
 **Documentation-only revision; no schema, validator, or normative package-format changes.**

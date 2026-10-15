@@ -1,0 +1,49 @@
+{
+  "schema": "ziprunner.verification-plan/v1",
+  "project": "example-project",
+  "version": "1.2.3",
+  "tasks": [
+    {
+      "id": "EX-100",
+      "criteria": [
+        {
+          "id": "EX-100-AC-1",
+          "description": "Reject an update targeting the wrong project before modifying its files.",
+          "mode": "automated",
+          "checks": [
+            "EX-100-T1"
+          ]
+        },
+        {
+          "id": "EX-100-AC-2",
+          "description": "Show the rejection visibly in the target environment.",
+          "mode": "manual",
+          "checks": [
+            "EX-100-M1"
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "EX-100-T1",
+      "kind": "automated",
+      "stage": "functional",
+      "description": "Project identity guard regression",
+      "runner_ref": "project-identity-regression",
+      "assertions": [
+        "Incorrect project ID is rejected.",
+        "No stop, backup or overlay is invoked."
+      ],
+      "test_ref": "tests/identity_guard_test.py"
+    },
+    {
+      "id": "EX-100-M1",
+      "kind": "manual",
+      "stage": "acceptance",
+      "description": "Operator confirms the GUI rejection state",
+      "instructions": "Attempt a mismatched update in a disposable project and confirm the error appears before any file change."
+    }
+  ]
+}

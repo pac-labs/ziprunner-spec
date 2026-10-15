@@ -390,7 +390,7 @@ def validate_looprd_link(link: dict, *, available: set[str] | None = None, root:
     return errors
 
 
-def inspect_archive(path: Path, expected_project: str | None = None) -> list[str]:
+def inspect_archive(path: Path, expected_project: str | None = None, require_verification_plan: bool = False) -> list[str]:
     errors: list[str]=[]
     try:
         with zipfile.ZipFile(path) as z:
@@ -434,6 +434,7 @@ def inspect_archive(path: Path, expected_project: str | None = None) -> list[str
             kind=manifest.get('update',{}).get('kind') if isinstance(manifest.get('update'),dict) else None
             project=manifest.get('project',{}).get('key') if isinstance(manifest.get('project'),dict) else None
             if kind=='source_update':
+                wb = None
                 if '.ziprunner-workboard-update.json' not in available:
                     errors.append('missing required root-level .ziprunner-workboard-update.json (source ZIP gate)')
                 else:
@@ -483,6 +484,21 @@ def inspect_archive(path: Path, expected_project: str | None = None) -> list[str
                     extra=listed-(available- {'.ziprunner-package-manifest.json'})
                     if missing or extra:errors.append(f'inventory does not cover archive (missing={len(missing)}, extra={len(extra)})')
                 except (ValueError,UnicodeError,RuntimeError) as exc:errors.append(str(exc))
+            if kind=='source_update':
+                from verification_contract import parse_plan_bytes, validate_plan
+                verification_file = 'ziprunner-verification-plan.json'
+                if verification_file not in available and require_verification_plan:
+                    errors.append('missing ziprunner-verification-plan.json for full functional-verification v2.3 conformance')
+                if verification_file in available:
+                    try:
+                        if z.getinfo(verification_file).file_size > 262144:
+                            errors.append('verification plan exceeds 256 KiB')
+                        else:
+                            plan = parse_plan_bytes(z.read(verification_file))
+                            errors.extend(validate_plan(plan, wb, project=expected_project or project,
+                                                        version=manifest.get('project', {}).get('version'), available=available))
+                    except (ValueError, UnicodeError, RuntimeError) as exc:
+                        errors.append(str(exc))
             if kind=='source_update' and 'ziprunner.looprd.json' in available:
                 try:
                     link_bytes=z.read('ziprunner.looprd.json') if z.getinfo('ziprunner.looprd.json').file_size<=MAX_MANIFEST else None
@@ -516,9 +532,26 @@ def run() -> int:
     package=sub.add_parser('package',help='inspect a ZIP without extracting or executing')
     package.add_argument('path',type=Path)
     package.add_argument('--expected-project',default=None)
+    vplan=sub.add_parser('verification-plan',help='statically validate feature criteria and check mappings (never executes checks)')
+    vplan.add_argument('path',type=Path)
+    vplan.add_argument('--workboard',type=Path,required=True)
+    vplan.add_argument('--root',type=Path,help='directory containing the referenced test implementation files')
+    vplan.add_argument('--expected-project',default=None)
+    package.add_argument('--require-verification-plan',action='store_true',
+                         help='require v2.3 functional-verification extension in source ZIP')
     args=parser.parse_args()
     try:
-        if args.mode=='package':errors=inspect_archive(args.path,args.expected_project)
+        if args.mode=='package':errors=inspect_archive(args.path,args.expected_project,args.require_verification_plan)
+        elif args.mode=='verification-plan':
+            from verification_contract import parse_plan_bytes, validate_plan
+            doc=parse_plan_bytes(args.path.read_bytes())
+            wb=read_workboard_bytes(args.workboard.read_bytes(),str(args.workboard))
+            errors=validate_workboard(wb,expected_project=args.expected_project)
+            available=None
+            if args.root is not None:
+                root=args.root.resolve()
+                available={item.relative_to(root).as_posix() for item in root.rglob('*') if item.is_file()}
+            errors+=validate_plan(doc,wb,project=args.expected_project or wb.get('project'),version=wb.get('version'),available=available)
         elif args.mode=='looprd':
             link=load_json(args.path.read_text(encoding='utf-8'),str(args.path))
             errors=validate_looprd_link(link,root=args.root,expected_project=args.expected_project)
@@ -537,7 +570,7 @@ def run() -> int:
         for err in errors:print('ERROR:',err,file=sys.stderr)
         print(f'FAIL: {len(errors)} issue(s)',file=sys.stderr)
         return 1
-    print('PASS: ZipRunner v2.1 '+args.mode+' validated')
+    print('PASS: ZipRunner v2.3 '+args.mode+' validated')
     return 0
 
 

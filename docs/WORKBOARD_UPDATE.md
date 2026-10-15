@@ -45,7 +45,7 @@ The independent tool enforces this repository's interoperability contract; it do
 
 ## Handover and diagnostics
 
-Package producers MUST provide the exact source ZIP filename and project/version, reported test results (passed/failed/skipped with reasons), and an outline of implemented and remaining tasks. Integrations using the `ZIPRUNNER_HANDOFF v1` response convention MUST retain its project/version/filename fields. Operator checks must be realistically executable. The manifest must describe the code actually in the ZIP, not planned intent. Never include active config, secrets, credentials, private keys or local runtime state.
+Package producers MUST provide the exact source ZIP filename and project/version, reported test results (passed/failed/skipped with reasons), and an outline of implemented and remaining tasks. Integrations using the `ZIPRUNNER_HANDOFF v1` response convention MUST retain its project/version/filename fields and MUST provide a verified, clickable link to the exact ZIP plus its SHA-256 in the accompanying external delivery handoff (see [delivery contract](DELIVERY.md)). Operator checks must be realistically executable. The manifest must describe the code actually in the ZIP, not planned intent. Never include active config, secrets, credentials, private keys or local runtime state.
 
 ## Mandatory lifecycle reconciliation (consumer requirement)
 
@@ -61,3 +61,7 @@ The v1 `.ziprunner-workboard-update.json` is **producer evidence**, not a status
 The workboard history is append-only by immutable artifact SHA-256 and review event; the current task board is an idempotent projection of that history keyed by stable task ID. Replaying the same artifact hash MUST NOT duplicate tasks, reviews or status events. Prior verified Done tasks MUST NOT be reopened by later unverified source ZIPs. A release readiness gate MUST reject a task reported delivered as part of the release if it has not been independently verified and closed, or if a verified task is still shown as unresolved. Backlog explicitly outside release scope MAY remain To Do or Blocked. Keep release publishing/approval gates separate.
 
 **Conformance scope:** lifecycle reconciliation is required for consumers claiming verified-closure support. The standalone [reference algorithm](../tools/workboard_lifecycle.py) demonstrates state transitions but does not operate on installed consumer state. See [conformance](CONFORMANCE.md).
+
+## Tests linked to the original task (v2.3 extension)
+
+A producer conforming to full v2.3 functional verification supplies a separate `ziprunner-verification-plan.json` mapping the existing `implemented[].id` values to explicit criterion/test IDs. The existing v1 Work board file remains unchanged and continues to supply the mandatory `operator_checks`. Test outcomes remain **consumer-owned** and a passed test only becomes Done after the independently required acceptance policy has been satisfied. See [functional verification](FUNCTIONAL_VERIFICATION.md).

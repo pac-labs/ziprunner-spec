@@ -47,6 +47,10 @@ The metadata-only format is a **proposed extension**, not an established general
 
 A source update for a Looprd-enabled project MAY ship its own `looprd.yaml` (under a declared path) with optional root-level `ziprunner.looprd.json` linking the configured ZipRunner project to the Looprd component and expected SHA-256. The actual DAPI YAML remains the data/API model source of truth; the sidecar is a **proposed ZipRunner producer convention**, not a deployed application interface. See [Looprd integration](LOOPRD.md). Do not ship database rows, connection URLs, API keys, admin credentials or node `sources.yaml` containing private deployment values. A ZIP containing Looprd files does not itself request a database migration or deployment. Non-Looprd projects do not need the sidecar.
 
+## Artifact download and handoff
+
+A package's embedded `ZIPRUNNER_HANDOFF.md` is optional supporting documentation. The **external delivery handoff** MUST provide a clickable, direct link to the exact packaged ZIP, its SHA-256, exact filename, project key and version. The link may only be supplied after it is known to exist, and an unresolvable or missing link makes artifact delivery incomplete even if the ZIP passes local validation. See [downloadable handoff](DELIVERY.md). No self-referential download URL is required inside the ZIP.
+
 ## Consistency and installation
 
 1. Wait for a complete download, validate ZIP safety and safe paths, then extract to a bounded temporary staging area.
@@ -62,3 +66,7 @@ Packages MUST NOT include a project's active `ziprunner.config.json`. ZipRunner 
 ## Task closure after a release
 
 Source ZIP authors MUST reuse existing Work board IDs for delivered functionality and supply the required `operator_checks`; the v1 file contains no authority to mark Done. The consuming ZipRunner implementation MUST associate imported implementation evidence with the existing task ID, request manager/QA and operator verification, and **move the same task to Done** after approved acceptance. A release readiness check fails for delivered scope not independently verified and closed. See [Work board lifecycle](WORKBOARD_UPDATE.md).
+
+## Functional-verification v2.3 extension
+
+A source ZIP claiming full v2.3 functional-verification conformance also carries `ziprunner-verification-plan.json` at the effective source root. This additional declarative file is schema-checked and cross-referenced against `implemented[]`. It does not remove the mandatory `.ziprunner-workboard-update.json` file, replace established runner configurations, or authorize command execution. The `ziprunner.verification-report/v1` and `ziprunner.origin-feedback/v1` records are generated and stored by the consumer **outside the downloaded ZIP**. The original conversation/window correlation is trusted intake state and not a producer-supplied target.

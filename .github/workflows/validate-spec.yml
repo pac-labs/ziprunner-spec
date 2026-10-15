@@ -17,4 +17,5 @@ jobs:
           python tools/validate.py manifest examples/ziprunner-manifest.json --root examples
           python tools/validate.py workboard examples/ziprunner-workboard-update.example.json --expected-project example-project
           python tools/validate.py looprd examples/ziprunner.looprd.json --root examples --expected-project example-project
+          python tools/validate.py verification-plan examples/verification-plan.json --workboard examples/ziprunner-workboard-update.example.json --root examples --expected-project example-project
           python -m unittest discover -s tests -v

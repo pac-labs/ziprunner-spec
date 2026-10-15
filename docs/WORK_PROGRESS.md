@@ -32,10 +32,14 @@ For each new update, a consumer MUST append/update `passes[]` keyed by stable ve
 
 ## Human-readable release information
 
-Human-facing handover information may summarize the exact artifact/version, planned/delivered/unfinished work, executed and omitted tests, known blockers, compatibility notes, and outstanding verification or approval. `ZIPRUNNER_HANDOFF.md` is a supported human-readable convention; machine-readable status remains authoritative only within its defined trust boundary.
+Human-facing handover information may summarize the exact artifact/version, planned/delivered/unfinished work, executed and omitted tests, known blockers, compatibility notes, and outstanding verification or approval. `ZIPRUNNER_HANDOFF.md` is a supported human-readable convention. An externally delivered ZIP MUST additionally have a real, clickable download link, exact filename, project/version and SHA-256 in the delivery message (see [delivery contract](DELIVERY.md)); machine-readable status remains authoritative only within its defined trust boundary.
 
 Do not state 'all passed' unless every named required test was actually observed passing in the correct environment. Static validation cannot substitute for a platform build or live application testing.
 
 ## Durable history
 
 The consumer stores a per-update immutable record with: SHA-256, project key, declared version, manifest digest, processing timestamp, recorded local events and final state. Imported revisions MUST be idempotent; prior failures are not erased by later unverified assertions. Human changes must be auditable. State files are written atomically and never maintained inside untrusted package root as the sole source of truth.
+
+## Feature tests and bounded feedback
+
+The v2.3 [functional verification plan](FUNCTIONAL_VERIFICATION.md) links delivered stable IDs to real checks of acceptance criteria; a build is not a proxy for functional completion. Passing observed tests create evidence for review, but closure follows the trusted acceptance policy, preserving the existing Done gate. The [origin feedback contract](ORIGIN_FEEDBACK.md) returns the actual result to a verified originating request rather than the active browser tab; unsuccessful sending remains visible and retryable, and does not change Work board truth.

@@ -38,3 +38,7 @@ A post-update plan's `gating` field is not proof that a historical runner treate
 ## Reproducibility
 
 Validation results should identify the consumer version, specification revision, and reference fixtures used. A green schema check, build success, runtime health signal, and operator approval are distinct outcomes.
+
+## Functional verification (specification v2.3)
+
+The v2.3 `ziprunner-verification-plan.json` is a **supplemental full-conformance extension**. It does not supersede the runtime-enforced `.ziprunner-workboard-update.json` v1 gate. Older consumers may ignore or reject unknown metadata and MUST NOT claim they execute the tests or correlate feedback merely because the producer supplied a valid plan. Consumer-owned verification reports and origin-feedback records are generated **after** import and never treated as authority supplied by source ZIPs. The check-to-task mapping and return-to-origin adapters require explicit local implementation.

@@ -1,0 +1,38 @@
+{
+  "schema": "ziprunner.verification-report/v1",
+  "run_id": "EXRUN-20261015-01",
+  "project": "example-project",
+  "version": "1.2.3",
+  "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "plan_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "generated_at": "2026-10-15T12:00:00Z",
+  "environment": {
+    "platform": "Windows test runner (illustrative)",
+    "runner_id": "sample-runner",
+    "revision": "sample-build"
+  },
+  "build": {
+    "status": "passed",
+    "provenance": "consumer_observed"
+  },
+  "checks": [
+    {
+      "id": "EX-100-T1",
+      "status": "passed",
+      "provenance": "consumer_observed",
+      "runner_ref": "project-identity-regression",
+      "evidence": [
+        {
+          "reference": "state/logs/example-project/test-run.txt",
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      ]
+    },
+    {
+      "id": "EX-100-M1",
+      "status": "not_run",
+      "provenance": "consumer_observed",
+      "reason": "Operator acceptance not performed."
+    }
+  ]
+}

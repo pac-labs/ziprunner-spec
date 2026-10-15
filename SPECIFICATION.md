@@ -1,6 +1,6 @@
-# ZipRunner Interchange Specification — v2.1.1
+# ZipRunner Interchange Specification — v2.3.0
 
-*Revised 2026-10-14. Version 2.1.1 is an editorial update of the 2.1.0 contract. This document distinguishes established consumer conventions from normative requirements and optional extensions; implementation support can vary by consumer version.*
+*Revised 2026-10-15. Version 2.3.0 adds functional verification and correlated result feedback contracts. The established Work board v1 intake, direct ZIP handoff, optional Looprd extension, and release approval boundaries remain unchanged. Consumer implementation support may vary.*
 
 **Versioning:** v2 is a major revision because it adds a mandatory source ZIP file that v1 producer packages did not need. See [workboard contract](docs/WORKBOARD_UPDATE.md). The published `ziprunner.workboard-update.v1` schema and reference example define the mandatory producer-side workboard document. Exact consumer support is version-specific; see [compatibility](docs/COMPATIBILITY.md).
 
@@ -14,7 +14,7 @@ Consumers implementing only the pre-v1 package conventions MUST NOT advertise Zi
 
 ## 2. Specification identity
 
-- The published specification version is `2.1.1`; major versions can change required source ZIP contents. The standalone `ziprunner-manifest.json` JSON schema retains its independent `spec_version: "1.x.y"` identity as a proposed supplemental protocol.
+- The published specification version is `2.3.0`; major versions can change required source ZIP contents. The standalone `ziprunner-manifest.json` JSON schema retains its independent `spec_version: "1.x.y"` identity as a proposed supplemental protocol.
 - **Every source update ZIP MUST contain an effective-source-root `.ziprunner-workboard-update.json`** with `schema: "ziprunner.workboard-update.v1"`. This is the currently enforced workboard gate and must never be replaced by a different manifest name or schema ID.
 - The separate supplemental work manifest `ziprunner-manifest.json` retains schema `ziprunner.update-manifest/v1` and `spec_version: "1.x.y"`; it is still required for **full interchange v2 producer conformance**, but ZipRunner 1.2.304.55 must not be assumed to parse it. The workboard gate itself does **not** require the supplemental manifest.
 - Project identity MUST be explicit and stable, independent of the ZIP filename or an application's current user-interface selection.
@@ -32,7 +32,8 @@ Consumers implementing only the pre-v1 package conventions MUST NOT advertise Zi
 | `.ziprunner-package-manifest.json` | Present in ZipRunner self-source package, schema `ziprunner.source-package-manifest.v1` | Per-file hashes, sizes, modes and complete-source integrity; **not** work progress |
 | `ZIPRUNNER_HANDOFF.md` | Existing human-readable handover convention | Release summary and outstanding checks; not a machine-enforced status directive |
 | `.ziprunner-workboard-update.json` | Required workboard intake convention documented for ZipRunner 1.2.304.55; installed-version conformance should be verified separately | Implementation evidence and operator checks; imported into durable Work board only after successful build |
-| `ziprunner-manifest.json` | **Supplemental, NOT CURRENTLY INGESTED** | Richer planned/done/todo, source evidence and handover; distinct from the enforced workboard gate |
+| `ziprunner-manifest.json` | Supplemental interchange contract; runtime support varies | Richer planned/done/todo, source evidence and handover; distinct from the enforced workboard gate |
+| `ziprunner-verification-plan.json` | **New full v2.3 producer conformance extension; not established as a legacy runtime gate** | Stable-task acceptance criteria mapped to trusted automated/manual checks; not an instruction to execute commands |
 
 Producers SHOULD include already-supported artifacts appropriate for the managed project. New files MUST NOT silently redefine semantics of these older formats. In particular, `gating: true` in a `.ziprunner-post-update-tests.json` example MUST NOT be treated as proof that current ZipRunner gates installation; source code describes these checks as **non-gating after application readiness**. Build-time test commands configured in the `.zr` recipe are a separate mechanism.
 
@@ -46,6 +47,7 @@ project.zr                            # existing recipe (or previously configure
 ziprunner-manifest.json               # supplemental v2 interoperability manifest
 ziprunner.project-state.json          # recommended existing progress bridge
 .ziprunner-post-update-tests.json     # when post-update checks apply
+ziprunner-verification-plan.json        # full v2.3 functional-verification extension
 README.md                             # project instructions
 ...source files, tests, documentation, evidence...
 ```
@@ -147,6 +149,24 @@ Projects defining API/database components through Looprd MAY provide the authori
 For a declared link, a v2.1-conforming producer/independent package validator MUST verify project identity, safe path, packaged-file existence and SHA-256. A Looprd-aware validator SHOULD use the pinned DAPI CLI for full YAML syntax/semantic checks; this spec's standard-library validator does not parse arbitrary YAML or run a database. ZipRunner `project_key` and Looprd `component` are distinct identity domains, and mapping MUST be reviewed rather than guessed. Data-model/API changes MUST appear in the mandatory Work board with stable tasks and operator checks. API activation, database migrations, and observed runtime health remain separate from ZipRunner build completion and release approval. See [Looprd / DAPI integration](docs/LOOPRD.md).
 
 `pac-labs/dapi` is the source of truth for `looprd/v1`: SQLite/PostgreSQL models, operations/scopes, WebSocket messages, additive migrations and runtime behavior. Its source index governs component registration. Consumers MUST NOT silently deploy a Looprd component, grant a management key to a client, treat a health endpoint as database verification, or assume a committed schema migration is undone by application rollback. See [`pac-labs/dapi`](https://github.com/pac-labs/dapi) and the versioned source reference in the integration guide.
+
+## 10B. Downloadable artifact handoff
+
+Whenever a producer delivers a downloadable ZIP, the accompanying human-facing handoff or release message **MUST** include a **direct clickable download link** to that exact ZIP. A filename, workspace-local path, source repository URL, release landing page, or a statement that a ZIP was created is insufficient by itself. The handoff **MUST** also state the configured project key, delivered version, exact ZIP filename and SHA-256 of the distributed ZIP. This obligation applies to managed source ZIPs and other ZIP deliveries, whether generated manually, by CI, or by an automated producer. It does not change the separate RoboScope `.patch`/`.diff` artifact contract.
+
+A link **MUST** be established from a real uploaded/generated artifact and must be retrievable by the intended recipient. HTTPS direct-download URLs are preferred for lasting public distribution; a platform-provided artifact link is acceptable for a session delivery if the recipient can actually open it. Temporary links MUST NOT be presented as permanent release locations. The named download MUST reference the same bytes identified by the filename and checksum. Producers MUST NOT invent or guess URLs, and SHOULD verify reachability where technically possible. If an actual retrievable link cannot be provided, the handoff MUST say **delivery incomplete**, explain the blocker and MUST NOT claim the artifact was delivered.
+
+The standard `ZIPRUNNER_HANDOFF v1` project, version and ZIP filename fields remain unchanged; the download link and SHA-256 are additional **human-facing delivery information**, not instructions to an archive parser or automatic install authorization. A package-embedded `ZIPRUNNER_HANDOFF.md` MAY record a known permanent URL, but the external delivery message MUST supply the currently valid link, since download addresses are often assigned after packaging. Handoff information MUST NOT contain access tokens, private credentials or protected local file paths. See [downloadable handoff](docs/DELIVERY.md).
+
+## 10C. Functional verification, work item closure and original-request feedback
+
+Full **v2.3 functional-verification producer conformance** requires an effective-root `ziprunner-verification-plan.json` (`ziprunner.verification-plan/v1`) in managed **source ZIPs**, in addition to the unchanged mandatory v1 Work board metadata. It MUST match the package identity/version, reference **every implemented Work board ID**, and map each delivered functional acceptance criterion to explicit automated, manual or mixed checks with nonempty assertions or operator instructions. Automated checks additionally MUST reference **real test implementations inside the source ZIP** via safe `test_ref` paths, never just assertion descriptions. Its configured `runner_ref` is an inert identifier, NEVER an executable command embedded in the untrusted archive. A consumer supporting only the older workboard gate MUST NOT be described as supporting this extension automatically. The package validator offers `--require-verification-plan` to check full v2.3 conformance.
+
+Consumers claiming v2.3 verification support MUST execute trusted tests against the delivered artifact revision, capture the actual outcomes and logs, and persist a consumer-owned `ziprunner.verification-report/v1` with artifact/plan SHA-256, environment, run ID, per-check outcomes and provenance. A green build or producer claim alone is insufficient. All original accepted criteria MUST be checked; missing test coverage or required human verification remains **unresolved**. Once the required independent manager/QA and operator approval is recorded (or the trusted project has an explicit pre-authorized automated acceptance policy for those criteria), the consumer MUST move **the original stable task ID** to Done, idempotently and with evidence. Failing/blocked/not-run checks MUST NOT mark Done. Release-readiness checks MUST reject inconsistent delivered scope; all push/tag/deploy approvals stay separate.
+
+Consumers implementing correlated origin feedback MUST bind each import to its initiating request and **verified destination** using trusted intake metadata, not the current tab or an untrusted ZIP-provided URL. After success, failure, or interruption they MUST persist a sanitized `ziprunner.origin-feedback/v1` result and queue it to the original authorized conversation/channel. They MUST distinguish queued, submitted and acknowledged delivery, use idempotent retries and bounded budgets, and never claim a message appeared without reliable acknowledgement. If the originating destination is unavailable or uncertain, park the report for operator review and provide a copyable fallback. Returning test results MUST NOT itself authorize more development passes or privileged actions.
+
+A producer MUST NOT claim that a specification document alone enables the consumer to run test commands, close Work board cards, or control a browser. See [functional verification](docs/FUNCTIONAL_VERIFICATION.md), [origin feedback](docs/ORIGIN_FEEDBACK.md), and [conformance](docs/CONFORMANCE.md).
 
 ## 11. Independent producer and consumer interoperability
 

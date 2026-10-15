@@ -1,0 +1,33 @@
+{
+  "schema": "ziprunner.origin-feedback/v1",
+  "message_id": "EXMSG-20261015-01",
+  "run_id": "EXRUN-20261015-01",
+  "project": "example-project",
+  "version": "1.2.3",
+  "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "origin_request_id": "EXREQ-20261015-01",
+  "destination_binding": "verified",
+  "summary": "Automated regression passed; one manual acceptance check remains. No task was closed.",
+  "checks": [
+    {
+      "id": "EX-100-T1",
+      "status": "passed"
+    },
+    {
+      "id": "EX-100-M1",
+      "status": "not_run",
+      "reason": "Operator acceptance pending."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "EX-100",
+      "state": "awaiting_verification",
+      "reason": "Manual criterion EX-100-AC-2 remains unverified."
+    }
+  ],
+  "delivery": {
+    "state": "queued",
+    "attempts": 0
+  }
+}
