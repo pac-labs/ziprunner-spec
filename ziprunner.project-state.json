@@ -1,0 +1,39 @@
+{
+  "schema": "ziprunner.project-state/v1",
+  "project": "ziprunner-spec",
+  "current_version": "",
+  "updated_at": "2026-11-11T12:12:36.386062",
+  "summary": "Describe the current purpose and implementation state of ziprunner-spec.",
+  "current_focus": "Have the manager/QA session review this starter state and define the next bounded implementation pass.",
+  "manager_review": {
+    "status": "needed",
+    "updated_at": "2026-11-11T12:12:36.385996",
+    "notes": "Starter state created locally; manager/QA review is still required."
+  },
+  "passes": [],
+  "roadmap": [
+    {
+      "id": "define-next-pass",
+      "title": "Define the next bounded implementation pass",
+      "status": "suggested",
+      "priority": "high",
+      "summary": "Collect the latest project state and convert it into one reviewable implementation slice.",
+      "acceptance_criteria": [
+        "The manager/QA session has reviewed the current project state.",
+        "The next pass has a bounded scope and screenshot/log/code-verifiable acceptance criteria.",
+        "Worker execution and promotion remain explicitly gated."
+      ],
+      "starter_placeholder": true
+    }
+  ],
+  "ziprunner_managed": {
+    "bridge": true,
+    "generated": true,
+    "managed_by": "ZipRunner",
+    "managed_by_version": "1.2.304.269",
+    "seed_source": "starter_state",
+    "reason": "missing_manifest_auto_repair",
+    "updated_at": "2026-11-11T12:12:36.386062",
+    "durable_state_path": "C:\\Users\\dorbi\\source\\ziprunner\\state\\project-pass-state\\ziprunner-spec.json"
+  }
+}
